@@ -2,67 +2,69 @@ package fileHandler.fileHandlerImpl;
 
 import collection.MaxSizeException;
 import collection.MyCollection;
-import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import fileHandler.MyFileHandler;
 import model.Employee;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.util.*;
 import java.text.SimpleDateFormat;
 
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 
 public class CSVFileHandler implements MyFileHandler, Runnable {
     private static final char DEFAULT_SEPARATOR = ',';
 
 
     private String fileName;
-    private static Employee employee;
-    private static MyCollection myCollection;
+    private MyCollection myCollection;
 
-    public CSVFileHandler(String fileName) {
+    public CSVFileHandler(String fileName, MyCollection myCollection) {
         this.fileName = fileName;
+        this.myCollection = myCollection;
     }
 
     @Override
-    public void read(String line) {
+    public MyCollection read(String fileName) {
 
-        try{
-            String[] attr = line.split(",");
+        try(BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+            String line = br.readLine();
+            //depend on a library not as parsing strings
+            while(line!=null) {
+                String[] attr = line.split(",");
+                Employee employee = new Employee();
+                //System.out.println(attr[0]+"  "+attr[1]+" "+attr[2]+" " +attr[3]);
+                employee.setFirstName(attr[0]);
+                employee.setLastName(attr[1]);
+                Date dateOfBirth = new SimpleDateFormat("dd/MM/yyyy").parse(attr[2]);
+                employee.setDateOfBirth(dateOfBirth);
+                employee.setExperience(Double.parseDouble(attr[3]));
+                myCollection.add(employee);
+                line = br.readLine();
+            }
 
-            //System.out.println(attr[0]+"  "+attr[1]+" "+attr[2]+" " +attr[3]);
-            employee.setFirstName(attr[0]);
-            employee.setLastName(attr[1]);
-            Date dateOfBirth = new SimpleDateFormat("dd/MM/yyyy").parse(attr[2]);
-            employee.setDateOfBirth(dateOfBirth);
-            employee.setExperience(Double.parseDouble(attr[3]));
-            String input = "Aug 31 09:53:19 2011";
-
-            myCollection.add(employee);
-        }
-        catch (ParseException p){
-            p.printStackTrace();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         } catch (MaxSizeException e) {
+            e.printStackTrace();
+        } catch (ParseException e) {
             e.printStackTrace();
         }
 
 
-        //return employee1;
+        return myCollection;
     }
 
     @Override
     public void write(String filePath) {
+        Employee employee = new Employee();
 
         try{
-            FileWriter writer=new FileWriter(filePath);
+            FileWriter writer=new FileWriter(filePath, true);
             StringBuilder sb=new StringBuilder();
-
+            employee = (Employee) myCollection.get();
             sb.append(employee.getFirstName());
             sb.append(",");
             sb.append(employee.getLastName());
@@ -71,14 +73,14 @@ public class CSVFileHandler implements MyFileHandler, Runnable {
             sb.append(",");
             sb.append(employee.getExperience());
             sb.append("\n");
-            //System.out.println(sb.toString());
             writer.append(sb.toString());
-            //System.out.println(writer.toString());
 
             writer.close();
         }
         catch (IOException io){
             io.printStackTrace();
+        } catch (MaxSizeException e) {
+            e.printStackTrace();
         }
 
 
@@ -88,52 +90,19 @@ public class CSVFileHandler implements MyFileHandler, Runnable {
     public void run () {
         String name = Thread.currentThread().getName();
         int csvcounter = 0;
-        if (csvcounter < 100)
-            if (name == "csvRead") {
-                this.read(fileName);
-            } else if (name == "csvWrite") {
+        if (name == "csvRead") {
+            this.read(fileName);
+        } else if (name == "csvWrite") {
+            while(csvcounter<100) {
                 this.write("/Users/muditjoshi/output.csv");
                 csvcounter++;
             }
+        }
+
+        System.out.println("CSV: "+ csvcounter);
     }
 
 
-    /*public static void main(String[] args) {
-        //reading
-        CSVFileHandler csvFileHandler=new CSVFileHandler();
-        String fileName="/Users/gorantlameghana/Downloads/sampleCSV.csv";
-        Path pathToFile = Paths.get(fileName);
-        try (BufferedReader br= new BufferedReader(new FileReader(fileName))){
-            String line=br.readLine();
-            while (line!=null)
-            {
-                String[] attr = line.split(",");
-                Employee employees=csvFileHandler.read(line);
-                System.out.println(employees.toString());
-                line=br.readLine();
-            }
-        }
-        catch (IOException io){
-            io.printStackTrace();
-        }
 
-
-        //writing
-        Employee employee=new Employee();
-        employee.setFirstName("meghana");
-        employee.setLastName("hi");
-
-        try{
-            Date dateOfBirth = new SimpleDateFormat("dd/MM/yyyy").parse("1999/28/21");
-            employee.setDateOfBirth(dateOfBirth);
-        }
-        catch (ParseException p){
-            p.printStackTrace();
-        }
-        employee.setExperience(Double.parseDouble("8"));
-        //System.out.println(employee.toString());
-        csvFileHandler.write(employee,"/Users/gorantlameghana/Downloads/sampleCSV1.csv");
-
-    }*/
 }
 

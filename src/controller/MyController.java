@@ -1,5 +1,6 @@
 package controller;
 
+import collection.MyCollection;
 import fileHandler.fileHandlerImpl.CSVFileHandler;
 import fileHandler.fileHandlerImpl.JSONFileHandler;
 import fileHandler.fileHandlerImpl.XMLFileHandler;
@@ -8,28 +9,30 @@ public class MyController {
 
     public static void main(String[] args) throws InterruptedException {
 
-        CSVFileHandler csvFileHandler = new CSVFileHandler("/Users/muditjoshi/employee.csv");
-        JSONFileHandler jsonFileHandler = new JSONFileHandler("/Users/muditjoshi/employee.json");
-        XMLFileHandler xmlFileHandler = new XMLFileHandler("/Users/muditjoshi/employee.xml");
+        MyCollection myCollection = new MyCollection();
 
-        System.out.println("Yaaha");
+        CSVFileHandler csvFileHandler = new CSVFileHandler("/Users/muditjoshi/employee.csv", myCollection);
+        JSONFileHandler jsonFileHandler = new JSONFileHandler("/Users/muditjoshi/employee.json", myCollection);
+        XMLFileHandler xmlFileHandler = new XMLFileHandler("/Users/muditjoshi/employee.xml", myCollection);
 
         Thread csvRead = new Thread(csvFileHandler,"csvRead");
         Thread jsonRead = new Thread(jsonFileHandler,"jsonRead");
         Thread xmlRead = new Thread(xmlFileHandler,"xmlRead");
 
-        System.out.println("Aur");
 
+        // need to handle exceptions here
         csvRead.start();
         jsonRead.start();
         xmlRead.start();
 
-        System.out.println("Bhi");
         csvRead.join();
         jsonRead.join();
         xmlRead.join();
 
-        System.out.println("Ho gaya");
+        System.out.println("Reading Is Done");
+        System.out.println(myCollection.getWriteCounter());
+        System.out.println("Starting Write");
+
         Thread csvWrite = new Thread(csvFileHandler,"csvWrite");
         Thread jsonWrite = new Thread(jsonFileHandler,"jsonWrite");
         Thread xmlWrite = new Thread(xmlFileHandler, "xmlWrite");
@@ -38,6 +41,10 @@ public class MyController {
         jsonWrite.start();
         xmlWrite.start();
 
+
+        csvWrite.join();
+        jsonWrite.join();
+        xmlWrite.join();
     }
 }
 

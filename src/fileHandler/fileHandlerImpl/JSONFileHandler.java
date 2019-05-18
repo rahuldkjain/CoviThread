@@ -20,59 +20,31 @@ import java.util.Date;
 import java.util.List;
 
 public class JSONFileHandler implements MyFileHandler,Runnable {
-    /*
-        private static void parseEmployeeObject(JSONObject employee)
-        {
-            //Get employee object within list
-            JSONObject employeeObject = (JSONObject) employee.get("employee");
-
-            //Get employee first name
-            String firstName = (String) employeeObject.get("firstName");
-            System.out.println(firstName);
-
-            //Get employee last name
-            String lastName = (String) employeeObject.get("lastName");
-            System.out.println(lastName);
-
-            //Get employee website name
-            String website = (String) employeeObject.get("website");
-            System.out.println(website);
-        }
-    */
     private String fileName;
-    private static Employee employee;
-    private static MyCollection myCollection;
+    private MyCollection myCollection;
 
-    public JSONFileHandler(String fileName) {
+    public JSONFileHandler(String fileName, MyCollection myCollection) {
         this.fileName = fileName;
+        this.myCollection = myCollection;
     }
 
     @Override
-    public void read(String filePath) throws java.text.ParseException {
+    public MyCollection read(String filePath) throws java.text.ParseException {
         JSONParser jsonParser = new JSONParser();
         List<Employee> employeeJSON = new ArrayList<>();
         try (FileReader reader = new FileReader(fileName)) {
-            //Read JSON file
             Object object = jsonParser.parse(reader);
             JSONArray employeeList = (JSONArray) object;
 
 
-            //Reading the array
             for (Object emp : employeeList) {
+                Employee employee = new Employee();
                 JSONObject jsonObject = (JSONObject) emp;
-                //Reading the String
                 String firstName = (String) jsonObject.get("firstName");
                 String lastName = (String) jsonObject.get("lastName");
                 String date = (String) jsonObject.get("dateOfBirth");
                 long experience = (long) jsonObject.get("experience");
                 Date dateOfBirth = new SimpleDateFormat("dd/MM/yyyy").parse(date);
-                System.out.println("Date: " + date);
-
-                //Printing all the values
-                System.out.println("Name: " + firstName);
-                System.out.println("Age: " + lastName);
-                System.out.println("dateOfBirth:" + dateOfBirth);
-                System.out.println("Experience:" + experience);
 
                 employee.setFirstName(firstName);
                 employee.setLastName(lastName);
@@ -92,14 +64,15 @@ public class JSONFileHandler implements MyFileHandler,Runnable {
         } catch (MaxSizeException e) {
             e.printStackTrace();
         }
-        //return employeeJSON;
+
+        return myCollection;
     }
 
     @Override
     public void write(String filePath) throws MaxSizeException {
         JSONObject employeeDetails = new JSONObject();
 
-        employee = (Employee) myCollection.get();
+        Employee employee = (Employee) myCollection.get();
 
 
         employeeDetails.put("firstName", employee.getFirstName());
@@ -112,7 +85,7 @@ public class JSONFileHandler implements MyFileHandler,Runnable {
         employeeList.add(employeeDetails);
 
         //Write JSON file
-        try (FileWriter file = new FileWriter(filePath)) {
+        try (FileWriter file = new FileWriter(filePath, true)) {
 
             file.write(employeeList.toJSONString());
             file.flush();
@@ -128,14 +101,15 @@ public class JSONFileHandler implements MyFileHandler,Runnable {
     public void run () {
         String name = Thread.currentThread().getName();
         int jsoncounter = 0;
-        if (jsoncounter < 100)
-            if (name == "jsonRead") {
-                try {
-                    this.read(fileName);
-                } catch (java.text.ParseException e) {
-                    e.printStackTrace();
-                }
-            } else if (name == "jsonWrite") {
+        if (name == "jsonRead") {
+            try {
+                this.myCollection = this.read(fileName);
+
+            } catch (java.text.ParseException e) {
+                e.printStackTrace();
+            }
+        } else if (name == "jsonWrite") {
+            while(jsoncounter<100) {
                 try {
                     this.write("/Users/muditjoshi/output.json");
                 } catch (MaxSizeException e) {
@@ -143,10 +117,9 @@ public class JSONFileHandler implements MyFileHandler,Runnable {
                 }
                 jsoncounter++;
             }
+        }
+
+        System.out.println("JSON: "+ jsoncounter);
     }
-    /*public static void main(String[] args) throws java.text.ParseException, NullPointerException {
-        JSONFileHandler f = new JSONFileHandler("/Users/rahuljain/Documents/CoviamThread/src/com/coviam/covithread/employee.json");
-        System.out.println(f.read("/Users/rahuljain/Documents/CoviamThread/src/com/coviam/covithread/employee.json"));    }
-    */
 
 }

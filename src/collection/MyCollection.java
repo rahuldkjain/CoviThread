@@ -6,6 +6,7 @@ public class MyCollection<T> {
 
     private static final int MAX_SIZE=300;
 
+    //don't use the arraylist .. create a reference for list
     ArrayList<T> objArrayList ;
 
     private static int writeCounter ;
@@ -17,16 +18,16 @@ public class MyCollection<T> {
         writeCounter=0;
         readCounter=0;
     }
-    public static int getWriteCounter() {
+    public int getWriteCounter() {
         return writeCounter;
     }
-    public static void setWriteCounter(int writeCounter) {
+    public void setWriteCounter(int writeCounter) {
         MyCollection.writeCounter = writeCounter;
     }
-    public static int getReadCounter() {
+    public int getReadCounter() {
         return readCounter;
     }
-    public static void setReadCounter(int readCounter) {
+    public void setReadCounter(int readCounter) {
         MyCollection.readCounter = readCounter;
     }
     synchronized public void add(T obj) throws MaxSizeException
